@@ -1,0 +1,433 @@
+<!-- © -->
+
+<html>
+
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body class="css_body">
+
+<div class="css_div_box_frame_full">
+  <div class="css_div_box_content">
+    <br>
+
+    linux kernel netfilter bridge hook (linux kernel 3.2) 的使用筆記.
+    <br><br><br>
+
+    需要的標頭檔 :<br>
+    <div class="css_div_block">
+      <font class="css_font_b1">#include &lt;linux/netfilter_bridge.h&gt;</font>
+    </div>
+    <br><br>
+
+    註冊掛勾函式需要使用的結構.
+    <div class="css_div_block">
+      <font class="css_font_b1">struct nf_hook_ops</font>
+    </div>
+    <br>
+
+    需要設定 struct nf_hook_ops 的結構成員.<br>
+    <div class="css_div_box">
+        <div class="css_div_box">
+          <font class="css_font_b1">pf</font><br>
+          要使用的協定, bridge 使用 <font class="css_font_r1">PF_BRIDGE</font>.
+        </div>
+        <br>
+
+        <div class="css_div_box">
+          <font class="css_font_b1">hooknum</font><br>
+          要掛勾的位置.<Br>
+          <table class="css_table_list2">
+            <tr>
+              <td class="css_td_list2_l"><font class="css_font_r1">NF_BR_PRE_ROUTING</font></td>
+              <td class="css_td_list2_r">
+                決定封包路由目的之期
+              </td>
+            </tr>
+            <tr>
+              <td class="css_td_list2_l"><font class="css_font_r1">NF_BR_LOCAL_IN</font></td>
+              <td class="css_td_list2_r">
+                封包是給本地的
+              </td>
+            </tr>
+            <tr>
+              <td class="css_td_list2_l"><font class="css_font_r1">NF_BR_LOCAL_OUT</font></td>
+              <td class="css_td_list2_r">
+                從本地送出的封包
+              </td>
+            </tr>
+            <tr>
+              <td class="css_td_list2_l"><font class="css_font_r1">NF_BR_LOCAL_FORWARD</font></td>
+              <td class="css_td_list2_r">
+                封包在 pre-routting 的點被判定是往其他介面轉送的
+              </td>
+            </tr>
+            <tr>
+              <td class="css_td_list2_l"><font class="css_font_r1">NF_BR_POST_ROUTING</font></td>
+              <td class="css_td_list2_r">
+                決定封包路由目的之後
+              </td>
+            </tr>
+          </table>
+        </div>
+        <br>
+
+        <div class="css_div_box">
+          <font class="css_font_b1">priority</font><br>
+          netfilter hook 允許多個函式掛勾在同一個位置, 設定函式的優先等級.<br>
+          <table class="css_table_list2">
+            <tr>
+              <td class="css_td_list2_l"><font class="css_font_r1">NF_BR_PRI_FIRST</font></td>
+            </tr>
+            <tr>
+              <td class="css_td_list2_l"><font class="css_font_r1">NF_BR_PRI_NAT_DST_BRIDGED</font></td>
+            </tr>
+            <tr>
+              <td class="css_td_list2_l"><font class="css_font_r1">NF_BR_PRI_FILTER_BRIDGED</font></td>
+            </tr>
+            <tr>
+              <td class="css_td_list2_l"><font class="css_font_r1">NF_BR_PRI_BRNF</font></td>
+            </tr>
+            <tr>
+              <td class="css_td_list2_l"><font class="css_font_r1">NF_BR_PRI_NAT_DST_OTHER</font></td>
+            </tr>
+            <tr>
+              <td class="css_td_list2_l"><font class="css_font_r1">NF_BR_PRI_FILTER_OTHER</font></td>
+            </tr>
+            <tr>
+              <td class="css_td_list2_l"><font class="css_font_r1">NF_BR_PRI_NAT_SRC</font></td>
+            </tr>
+            <tr>
+              <td class="css_td_list2_l"><font class="css_font_r1">NF_BR_PRI_LAST</font></td>
+            </tr>
+          </table>
+        </div>
+        <br>
+
+        <div class="css_div_box">
+          <font class="css_font_b1">hook</font><br>
+          指定要掛勾的函式, 函式原型是 :
+          <div class="css_div_block">
+            <font class="css_font_g1">
+            unsigned int hook(<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;unsigned int hooknum,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;struct sk_buff *skb,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;const struct net_device *in,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;const struct net_device *out,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;int (*okfn) (struct sk_buff *))
+            </font>
+          </div>
+        </div>
+    </div>
+    <br><br>
+
+    之後註冊函式.<br>
+    <div class="css_div_box">
+      <font class="css_font_b1">nf_register_hook</font><br>
+      <table class="css_table_list2">
+        <tr>
+          <td class="css_td_list2_t">函式型態</td>
+        </tr>
+        <tr>
+          <td class="css_td_list2_l"><font class="css_font_r1">int</font></td>
+        </tr>
+      </table>
+      <table class="css_table_list2">
+        <tr>
+          <td class="css_td_list2_t" colspan="2">函式參數</td>
+        </tr>
+        <tr>
+          <td class="css_td_list2_l">
+            <font class="css_font_r1">struct nf_hook_ops *</font><br>
+            <font class="css_font_g1">reg</font>
+          </td>
+          <td class="css_td_list2_r">
+            要處理的掛勾資料
+          </td>
+        </tr>
+      </table>
+      <table class="css_table_list2">
+        <tr>
+          <td class="css_td_list2_t" colspan="2">函式返回值</td>
+        </tr>
+        <tr>
+          <td class="css_td_list2_l"><font class="css_font_r1">&lt;&nbsp; 0</font></td>
+          <td class="css_td_list2_r">錯誤</td>
+        </tr>
+        <tr>
+          <td class="css_td_list2_l"><font class="css_font_r1">== 0</font></td>
+          <td class="css_td_list2_r">正常</td>
+        </tr>
+      </table>
+      例如 :<br>
+<pre class="css_pre_code">
+struct nf_hook_ops br_hook_forward;
+
+memset(&br_hook_forward, 0, sizeof(br_hook_forward));
+br_hook_forward.pf = PF_BRIDGE;
+br_hook_forward.hooknum = NF_BR_FORWARD;
+br_hook_forward.priority = NF_BR_PRI_FIRST;
+br_hook_forward.hook = br_forward_handle;
+
+if(nf_register_hook(&br_hook_forward) < 0)
+    printk(KERN_ERR "call nf_register_hook() fail");
+</pre>
+    </div>
+    <br>
+
+    解除註冊方法.<br>
+    <div class="css_div_box">
+      <font class="css_font_b1">nf_unregister_hook</font><br>
+      <table class="css_table_list2">
+        <tr>
+          <td class="css_td_list2_t">函式型態</td>
+        </tr>
+        <tr>
+          <td class="css_td_list2_l"><font class="css_font_r1">void</font></td>
+        </tr>
+      </table>
+      <table class="css_table_list2">
+        <tr>
+          <td class="css_td_list2_t" colspan="2">函式參數</td>
+        </tr>
+        <tr>
+          <td class="css_td_list2_l">
+            <font class="css_font_r1">struct nf_hook_ops *</font><br>
+            <font class="css_font_g1">reg</font>
+          </td>
+          <td class="css_td_list2_r">
+            要處理的掛勾資料
+          </td>
+        </tr>
+      </table>
+      例如 :<br>
+<pre class="css_pre_code">
+nf_unregister_hook(&br_hook_forward);
+</pre>
+    </div>
+    <br><br>
+
+    掛勾函式的參數和回傳值的意義.<br>
+    <div class="css_div_box">
+      <div class="css_div_block">
+        <font class="css_font_b1">
+        unsigned int hook(<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;unsigned int hooknum,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;struct sk_buff *skb,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;const struct net_device *in,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;const struct net_device *out,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;int (*okfn) (struct sk_buff *))
+        </font>
+      </div>
+      <table class="css_table_list2">
+        <tr>
+          <td class="css_td_list2_t" colspan="2">函式參數</td>
+        </tr>
+        <tr>
+          <td class="css_td_list2_l">
+            <font class="css_font_r1">unsigned int</font><br>
+            <font class="css_font_g1">hooknum</font>
+          </td>
+          <td class="css_td_list2_r">
+            同一個處理函式可以掛勾在不同的位置 (例如掛在 NF_BR_LOCAL_IN, NF_BR_LOCAL_OUT),
+            hooknum 記錄是從哪個點 (NF_BR_LOCAL_IN, NF_BR_LOCAL_OUT) 呼叫此函式
+          </td>
+        </tr>
+        <tr>
+          <td class="css_td_list2_l">
+            <font class="css_font_r1">struct sk_buff *</font><br>
+            <font class="css_font_g1">skb</font>
+          </td>
+          <td class="css_td_list2_r">
+            封包資料
+          </td>
+        </tr>
+        <tr>
+          <td class="css_td_list2_l">
+            <font class="css_font_r1">const struct net_device *</font><br>
+            <font class="css_font_g1">in</font>
+          </td>
+          <td class="css_td_list2_r">
+            封包從哪個網路設備進入
+          </td>
+        </tr>
+        <tr>
+          <td class="css_td_list2_l">
+            <font class="css_font_r1">const struct net_device *</font><br>
+            <font class="css_font_g1">out</font>
+          </td>
+          <td class="css_td_list2_r">
+            封包會往哪個網路設備出去
+          </td>
+        </tr>
+        <tr>
+          <td class="css_td_list2_l">
+            <font class="css_font_r1">int *</font><br>
+            <font class="css_font_g1">okfn</font>
+          </td>
+          <td class="css_td_list2_r">
+            處理完 netfilter hook 函式後要呼叫哪個函式處理
+          </td>
+        </tr>
+      </table>
+      <table class="css_table_list2">
+        <tr>
+          <td class="css_td_list2_t" colspan="2">函式返回值</td>
+        </tr>
+        <tr>
+          <td class="css_td_list2_l"><font class="css_font_r1">NF_DROP</font></td>
+          <td class="css_td_list2_r">
+            掛勾函式通知丟棄此封包, 不會再繼續 netfilter 的流程.
+          </td>
+        </tr>
+        <tr>
+          <td class="css_td_list2_l"><font class="css_font_r1">NF_ACCEPT</font></td>
+          <td class="css_td_list2_r">
+            掛勾函式通知允許此封包, 但是還是會繼續 netfilter 的流程 (表示會被其他掛勾函式處理).
+          </td>
+        </tr>
+        <tr>
+          <td class="css_td_list2_l"><font class="css_font_r1">NF_STOLEN</font></td>
+          <td class="css_td_list2_r">
+            掛勾函式通知丟棄此封包, 不會再繼續 netfilter 的流程,
+            和 NF_DROP 不同的地方在於 kernel 會把封包的控制權交由掛勾函式,
+            表示掛勾函式需要自己使用 kfree_skb() 釋放封包.
+          </td>
+        </tr>
+        <tr>
+          <td class="css_td_list2_l"><font class="css_font_r1">NF_QUEUE</font></td>
+          <td class="css_td_list2_r">
+            掛勾函式通知將此封包放入其他列隊等待處理.
+          </td>
+        </tr>
+        <tr>
+          <td class="css_td_list2_l"><font class="css_font_r1">NF_REPEAT</font></td>
+          <td class="css_td_list2_r">
+            掛勾函式通知將此封包重新走一遍 netfilter 流程.
+          </td>
+        </tr>
+        <tr>
+          <td class="css_td_list2_l"><font class="css_font_r1">NF_STOP</font></td>
+          <td class="css_td_list2_r">
+            掛勾函式通知允許此封包, 和 NF_ACCEPT 不同的地方在於不會繼續 netfilter 的流程
+            (表示不會被其他掛勾函式處理).
+          </td>
+        </tr>
+      </table>
+    </div>
+    <br><br>
+
+    在核心模組使用範例 :<br>
+<pre class="css_pre_code">
+#include &lt;linux/init.h&gt;
+#include &lt;linux/kernel.h&gt;
+#include &lt;linux/module.h&gt;
+#include &lt;linux/netfilter_bridge.h&gt;
+
+#define FILE_NAME (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+#define DMSG(msg_fmt, msg_args...) \
+    printk(KERN_INFO "%s(%04u): " msg_fmt "\n", FILE_NAME, __LINE__, ##msg_args)
+
+struct nf_hook_ops br_hook_local_in, br_hook_local_out, br_hook_forward;
+
+unsigned int process_bridge_local_handle(
+    unsigned int hooknum,
+    struct sk_buff *skb,
+    const struct net_device *in,
+    const struct net_device *out,
+    int (*okfn) (struct sk_buff *)
+{
+    // process_bridge_local_handle 掛勾在 NF_BR_LOCAL_IN 和 NF_BR_LOCAL_OUT,
+    // 使用 hooknum 可以知道函式是從哪個點被呼叫.
+    DMSG("netfilter bridge hook local, hooknum = %u", hooknum);
+    return NF_ACCEPT;
+}
+
+unsigned int process_bridge_forward_handle(
+    unsigned int hooknum,
+    struct sk_buff *skb,
+    const struct net_device *in,
+    const struct net_device *out,
+    int (*okfn) (struct sk_buff *)
+{
+    DMSG("netfilter bridge forward");
+    return NF_ACCEPT;
+}
+
+static int __init main_init(
+    void)
+{
+    // 掛勾在 NF_BR_LOCAL_IN.
+    memset(&br_hook_local_in, 0, sizeof(br_hook_local_in));
+    br_hook_local_in.pf = PF_BRIDGE;
+    br_hook_local_in.hooknum = NF_BR_LOCAL_IN;
+    br_hook_local_in.priority = NF_BR_PRI_FIRST;
+    br_hook_local_in.hook = process_bridge_local_handle;
+    if(nf_register_hook(&br_hook_local_in) < 0)
+    {
+        DMSG("call nf_register_hook(NF_BR_LOCAL_IN) fail");
+        goto FREE_01;
+    }
+
+    // 掛勾在 NF_BR_LOCAL_OUT.
+    memset(&br_hook_local_out, 0, sizeof(br_hook_local_out));
+    br_hook_local_out.pf = PF_BRIDGE;
+    br_hook_local_out.hooknum = NF_BR_LOCAL_OUT;
+    br_hook_local_out.priority = NF_BR_PRI_FIRST;
+    br_hook_local_out.hook = process_bridge_local_handle;
+    if(nf_register_hook(&br_hook_local_out) < 0)
+    {
+        DMSG("call nf_register_hook(NF_BR_LOCAL_OUT) fail");
+        goto FREE_02;
+    }
+
+    // 掛勾在 NF_BR_LOCAL_FORWARD.
+    memset(&br_hook_forward, 0, sizeof(br_hook_forward));
+    br_hook_forward.pf = PF_BRIDGE;
+    br_hook_forward.hooknum = NF_BR_LOCAL_FORWARD;
+    br_hook_forward.priority = NF_BR_PRI_FIRST;
+    br_hook_forward.hook = process_bridge_forward_handle;
+    if(nf_register_hook(&br_hook_forward) < 0)
+    {
+        DMSG("call nf_register_hook(NF_BR_LOCAL_FORWARD) fail");
+        goto FREE_03;
+    }
+
+    return 0;
+FREE_03:
+    nf_unregister_hook(&br_hook_local_out);
+FREE_02:
+    nf_unregister_hook(&br_hook_local_in);
+FREE_01:
+    return 0;
+}
+
+static void __exit main_exit(
+    void)
+{
+    nf_unregister_hook(&br_hook_forward);
+    nf_unregister_hook(&br_hook_local_out);
+    nf_unregister_hook(&br_hook_local_in);
+    return;
+}
+
+module_init(main_init);
+module_exit(main_exit);
+
+MODULE_LICENSE("GPL");
+MODULE_DESCRIPTION("example");
+</pre>
+    <br><br>
+
+    封包在 netfilter bridge hook 中移動的流程.<br>
+    <img src="image_01.png"/><br>
+    <br>
+
+  </div>
+</div>
+
+</body>
+
+</html>
